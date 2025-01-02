@@ -56,16 +56,22 @@ async function checkForUpdates() {
 
     console.log('Moving files to root directory...');
     const rootDir = path.resolve(__dirname, '..');
-    const files = fs.readdirSync(extractDir);
 
-    files.forEach(file => {
+    // Move all files from the extracted directory to the root directory, excluding start-bot.js
+    fs.readdirSync(extractDir).forEach(file => {
+      const srcPath = path.join(extractDir, file);
+      const destPath = path.join(rootDir, file);
+      
       if (file !== 'start-bot.js') {
-        const srcPath = path.join(extractDir, file);
-        const destPath = path.join(rootDir, file);
-        if (fs.existsSync(destPath)) {
-          fs.rmSync(destPath, { recursive: true, force: true });
+        if (fs.lstatSync(srcPath).isDirectory()) {
+          // Recursively copy the directory
+          execSync(`cp -r ${srcPath} ${destPath}`, { stdio: 'inherit' });
+          fs.rmSync(srcPath, { recursive: true, force: true });
+        } else {
+          // Overwrite file if it exists
+          fs.copyFileSync(srcPath, destPath);
+          fs.unlinkSync(srcPath);
         }
-        fs.renameSync(srcPath, destPath);
       }
     });
 

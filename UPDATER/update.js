@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const os = require('os');
 const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
@@ -44,53 +43,24 @@ async function checkForUpdates() {
 
     console.log('Download complete. Extracting...');
     const rootDir = path.resolve(__dirname, '..');
-    const tempExtractDir = path.resolve(__dirname, 'temp-extract');
 
-    if (!fs.existsSync(tempExtractDir)) {
-      fs.mkdirSync(tempExtractDir);
-    }
-
-    if (os.platform() === 'win32') {
-      // Use extract-zip for Windows
-      const extract = require('extract-zip');
-      await extract(zipPath, { dir: tempExtractDir });
-    } else {
-      // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${tempExtractDir}`);
-    }
+    // Use extract-zip for Windows
+    const extract = require('extract-zip');
+    await extract(zipPath, { dir: rootDir });
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    console.log('Moving files to root directory...');
-    moveFiles(tempExtractDir, rootDir);
+    console.log('Renaming start-bot.js if it exists in the update...');
+    const newStartBotPath = path.join(rootDir, 'start-bot.js');
+    const copyStartBotPath = path.join(rootDir, 'copy-start-bot.js');
 
-    // Clean up the temporary extraction directory
-    fs.rmSync(tempExtractDir, { recursive: true, force: true });
+    if (fs.existsSync(newStartBotPath)) {
+      fs.renameSync(newStartBotPath, copyStartBotPath);
+    }
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {
     console.error('Error checking for updates:', error);
   }
-}
-
-function moveFiles(srcDir, destDir) {
-  fs.readdirSync(srcDir).forEach(file => {
-    const srcPath = path.join(srcDir, file);
-    const destPath = path.join(destDir, file);
-
-    if (file === 'start-bot.js') {
-      // Rename start-bot.js to copy-start-bot.js
-      fs.renameSync(srcPath, path.join(destDir, 'copy-start-bot.js'));
-    } else {
-      if (fs.lstatSync(srcPath).isDirectory()) {
-        if (fs.existsSync(destPath)) {
-          fs.rmSync(destPath, { recursive: true, force: true });
-        }
-        fs.renameSync(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-      }
-    }
-  });
 }
 
 function parseVersion(version) {

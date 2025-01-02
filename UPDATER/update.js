@@ -44,23 +44,43 @@ async function checkForUpdates() {
 
     console.log('Download complete. Extracting...');
     const rootDir = path.resolve(__dirname, '..');
+    const tempExtractDir = path.resolve(__dirname, 'temp-extract');
+
+    if (!fs.existsSync(tempExtractDir)) {
+      fs.mkdirSync(tempExtractDir);
+    }
+
     if (os.platform() === 'win32') {
       // Use extract-zip for Windows
       const extract = require('extract-zip');
-      await extract(zipPath, { dir: rootDir });
+      await extract(zipPath, { dir: tempExtractDir });
     } else {
       // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${rootDir}`);
+      execSync(`unzip -o ${zipPath} -d ${tempExtractDir}`);
     }
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    console.log('Renaming start-bot.js if it exists in the update...');
-    const newStartBotPath = path.join(rootDir, 'start-bot.js');
-    const copyStartBotPath = path.join(rootDir, 'copy-start-bot.js');
+    console.log('Moving files to root directory...');
+    fs.readdirSync(tempExtractDir).forEach(file => {
+      const srcPath = path.join(tempExtractDir, file);
+      const destPath = path.join(rootDir, file);
 
-    if (fs.existsSync(newStartBotPath)) {
-      fs.renameSync(newStartBotPath, copyStartBotPath);
-    }
+      if (file === 'start-bot.js') {
+        // Rename start-bot.js to copy-start-bot.js
+        fs.renameSync(srcPath, path.join(rootDir, 'copy-start-bot.js'));
+      } else {
+        // Overwrite existing files
+        if (fs.lstatSync(srcPath).isDirectory()) {
+          fs.rmSync(destPath, { recursive: true, force: true });
+          fs.renameSync(srcPath, destPath);
+        } else {
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    });
+
+    // Clean up the temporary extraction directory
+    fs.rmSync(tempExtractDir, { recursive: true, force: true });
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

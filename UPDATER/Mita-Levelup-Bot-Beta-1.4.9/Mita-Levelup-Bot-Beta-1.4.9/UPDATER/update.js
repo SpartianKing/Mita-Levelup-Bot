@@ -44,26 +44,28 @@ async function checkForUpdates() {
 
     console.log('Download complete. Extracting...');
     const extractDir = path.resolve(__dirname, `Mita-Levelup-Bot-${latestTag.name}`);
-    const extract = require('extract-zip');
-    await extract(zipPath, { dir: extractDir });
+    if (os.platform() === 'win32') {
+      // Use extract-zip for Windows
+      const extract = require('extract-zip');
+      await extract(zipPath, { dir: extractDir });
+    } else {
+      // Use unzip command for Linux
+      execSync(`unzip -o ${zipPath} -d ${extractDir}`);
+    }
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
     console.log('Moving files to root directory...');
     const rootDir = path.resolve(__dirname, '..');
+    const files = fs.readdirSync(extractDir);
 
-    // Move all files from the extracted directory to the root directory, excluding start-bot.js
-    fs.readdirSync(extractDir).forEach(file => {
-      const srcPath = path.join(extractDir, file);
-      const destPath = path.join(rootDir, file);
-
+    files.forEach(file => {
       if (file !== 'start-bot.js') {
-        if (fs.lstatSync(srcPath).isDirectory()) {
-          // Recursively copy the directory
-          fs.cpSync(srcPath, destPath, { recursive: true, force: true });
-        } else {
-          // Overwrite file if it exists
-          fs.copyFileSync(srcPath, destPath);
+        const srcPath = path.join(extractDir, file);
+        const destPath = path.join(rootDir, file);
+        if (fs.existsSync(destPath)) {
+          fs.rmSync(destPath, { recursive: true, force: true });
         }
+        fs.renameSync(srcPath, destPath);
       }
     });
 

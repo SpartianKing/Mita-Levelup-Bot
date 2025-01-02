@@ -70,6 +70,13 @@ To access the bot's session later, use:
 ```bash
 screen -r dreamcraftnetworklevelingbot
 ```
+
+
+
+
+# Updating Bot
+
+Once there is a new release available, 
 # Conclusion
 Once you've followed all the steps, your bot should be up and running! You can now manage it through Discord by using the admin permissions and sending commands in the specified channels.
 

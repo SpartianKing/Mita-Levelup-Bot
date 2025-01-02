@@ -43,41 +43,19 @@ async function checkForUpdates() {
 
     console.log('Download complete. Extracting...');
     const rootDir = path.resolve(__dirname, '..');
-    const backupDir = path.resolve(__dirname, 'backup');
-
-    // Create a backup directory if it doesn't exist
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
-
-    // Backup node_modules and .env
-    const nodeModulesPath = path.join(rootDir, 'node_modules');
-    const envPath = path.join(rootDir, '.env');
-
-    if (fs.existsSync(nodeModulesPath)) {
-      execSync(`xcopy /E /I /Y "${nodeModulesPath}" "${path.join(backupDir, 'node_modules')}"`);
-    }
-
-    if (fs.existsSync(envPath)) {
-      fs.copyFileSync(envPath, path.join(backupDir, '.env'));
-    }
 
     // Use extract-zip for Windows
     const extract = require('extract-zip');
     await extract(zipPath, { dir: rootDir });
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    // Restore node_modules and .env
-    if (fs.existsSync(path.join(backupDir, 'node_modules'))) {
-      execSync(`xcopy /E /I /Y "${path.join(backupDir, 'node_modules')}" "${nodeModulesPath}"`);
-    }
+    console.log('Renaming start-bot.js if it exists in the update...');
+    const newStartBotPath = path.join(rootDir, 'start-bot.js');
+    const copyStartBotPath = path.join(rootDir, 'copy-start-bot.js');
 
-    if (fs.existsSync(path.join(backupDir, '.env'))) {
-      fs.copyFileSync(path.join(backupDir, '.env'), envPath);
+    if (fs.existsSync(newStartBotPath)) {
+      fs.renameSync(newStartBotPath, copyStartBotPath);
     }
-
-    // Clean up the backup directory
-    fs.rmSync(backupDir, { recursive: true, force: true });
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

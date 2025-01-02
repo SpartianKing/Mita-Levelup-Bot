@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const os = require('os');
 const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
@@ -42,42 +43,31 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
-    const rootDir = path.resolve(__dirname, '..');
-    const backupDir = path.resolve(__dirname, 'backup');
-
-    // Create a backup directory if it doesn't exist
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
-
-    // Backup node_modules and .env
-    const nodeModulesPath = path.join(rootDir, 'node_modules');
-    const envPath = path.join(rootDir, '.env');
-
-    if (fs.existsSync(nodeModulesPath)) {
-      execSync(`xcopy /E /I /Y "${nodeModulesPath}" "${path.join(backupDir, 'node_modules')}"`);
-    }
-
-    if (fs.existsSync(envPath)) {
-      fs.copyFileSync(envPath, path.join(backupDir, '.env'));
-    }
-
-    // Use extract-zip for Windows
-    const extract = require('extract-zip');
-    await extract(zipPath, { dir: rootDir });
+    const extractDir = path.resolve(__dirname, `Mita-Levelup-Bot-${latestTag.name}`);
+    execSync(`unzip -o ${zipPath} -d ${extractDir}`);
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    // Restore node_modules and .env
-    if (fs.existsSync(path.join(backupDir, 'node_modules'))) {
-      execSync(`xcopy /E /I /Y "${path.join(backupDir, 'node_modules')}" "${nodeModulesPath}"`);
-    }
+    console.log('Moving files to root directory...');
+    const rootDir = path.resolve(__dirname, '..');
 
-    if (fs.existsSync(path.join(backupDir, '.env'))) {
-      fs.copyFileSync(path.join(backupDir, '.env'), envPath);
-    }
+    // Move all files from the extracted directory to the root directory, excluding start-bot.js
+    fs.readdirSync(extractDir).forEach(file => {
+      const srcPath = path.join(extractDir, file);
+      const destPath = path.join(rootDir, file);
 
-    // Clean up the backup directory
-    fs.rmSync(backupDir, { recursive: true, force: true });
+      if (file !== 'start-bot.js') {
+        if (fs.lstatSync(srcPath).isDirectory()) {
+          // Recursively copy the directory
+          execSync(`cp -r ${srcPath} ${destPath}`);
+        } else {
+          // Overwrite file if it exists
+          fs.copyFileSync(srcPath, destPath);
+        }
+      }
+    });
+
+    // Clean up the temporary directory
+    fs.rmSync(extractDir, { recursive: true, force: true });
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

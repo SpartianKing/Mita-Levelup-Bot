@@ -50,9 +50,10 @@ async function checkForUpdates() {
       fs.mkdirSync(backupDir);
     }
 
-    // Backup node_modules and .env
+    // Backup node_modules and .env and levels.db
     const nodeModulesPath = path.join(rootDir, 'node_modules');
     const envPath = path.join(rootDir, '.env');
+    const databasePath = path.join(rootDir, 'levels.db');
 
     if (fs.existsSync(nodeModulesPath)) {
       execSync(`xcopy /E /I /Y "${nodeModulesPath}" "${path.join(backupDir, 'node_modules')}"`);
@@ -60,6 +61,9 @@ async function checkForUpdates() {
 
     if (fs.existsSync(envPath)) {
       fs.copyFileSync(envPath, path.join(backupDir, '.env'));
+    }
+    if (fs.existsSync(databasePath)){
+      fs.copyFileSync(databasePath, path.join(backupDir, 'levels.db'));
     }
 
     // Use extract-zip for Windows
@@ -74,6 +78,9 @@ async function checkForUpdates() {
 
     if (fs.existsSync(path.join(backupDir, '.env'))) {
       fs.copyFileSync(path.join(backupDir, '.env'), envPath);
+    }
+    if (fs.existsSync(path.join(backupDir, 'levels.db'))) {
+      fs.copyFileSync(path.join(backupDir, 'levels.db'), envPath);
     }
 
     // Clean up the backup directory

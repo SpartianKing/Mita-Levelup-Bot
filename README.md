@@ -57,14 +57,14 @@ Open your terminal and navigate to the directory containing main.js.
 
 Run the following command to start the bot:
 ```bash
-node main.js
+node start-bot.js
 ```
 ## On Linux
 Open your terminal and navigate to the directory containing main.js.
 
 To run the bot in a new session, use the following command:
 ```bash
-screen -dmS dreamcraftnetworklevelingbot node main.js
+screen -dmS dreamcraftnetworklevelingbot node start-bot.js
 ```
 To access the bot's session later, use:
 ```bash
@@ -76,7 +76,7 @@ screen -r dreamcraftnetworklevelingbot
 
 # Updating Bot
 
-Once there is a new release available, 
+When you run the start-bot.js file, it will automatically check with Github if there is an update or not. IF there is an update, it will download the latest version to a new folder within your bot's folder, as well as copy your .env, node_modules, and levels.db files to the new folder. Simply delete the current installation, or copy the files from the updated bot folder to your current directory, and then run the start-bot.js once again, and you'll be updated! Keep in mind that this still is in beta, so a lot will change.
 # Conclusion
 Once you've followed all the steps, your bot should be up and running! You can now manage it through Discord by using the admin permissions and sending commands in the specified channels.
 

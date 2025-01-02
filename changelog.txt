@@ -1,2 +1,0 @@
-# Updated the trivia command to only be allowed in the specified channel via .env
-# Added new value to the .env (trivia channel id)

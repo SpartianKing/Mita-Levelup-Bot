@@ -11,9 +11,14 @@ async function startBot() {
     // Define the path to main.js
     const mainPath = path.resolve(__dirname, 'main.js');
 
+    // Check if main.js exists
+    if (!fs.existsSync(mainPath)) {
+      throw new Error(`main.js not found at path: ${mainPath}`);
+    }
+
     // Start the bot
     console.log('Starting the bot...');
-    execSync(`node ${mainPath}`, { stdio: 'inherit' });
+    execSync(`node "${mainPath}"`, { stdio: 'inherit' }); // Use quotes to handle spaces in paths
   } catch (error) {
     console.error('Error starting the bot:', error);
   }

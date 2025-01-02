@@ -61,23 +61,7 @@ async function checkForUpdates() {
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
     console.log('Moving files to root directory...');
-    fs.readdirSync(tempExtractDir).forEach(file => {
-      const srcPath = path.join(tempExtractDir, file);
-      const destPath = path.join(rootDir, file);
-
-      if (file === 'start-bot.js') {
-        // Rename start-bot.js to copy-start-bot.js
-        fs.renameSync(srcPath, path.join(rootDir, 'copy-start-bot.js'));
-      } else {
-        // Overwrite existing files
-        if (fs.lstatSync(srcPath).isDirectory()) {
-          fs.rmSync(destPath, { recursive: true, force: true });
-          fs.renameSync(srcPath, destPath);
-        } else {
-          fs.copyFileSync(srcPath, destPath);
-        }
-      }
-    });
+    moveFiles(tempExtractDir, rootDir);
 
     // Clean up the temporary extraction directory
     fs.rmSync(tempExtractDir, { recursive: true, force: true });
@@ -86,6 +70,27 @@ async function checkForUpdates() {
   } catch (error) {
     console.error('Error checking for updates:', error);
   }
+}
+
+function moveFiles(srcDir, destDir) {
+  fs.readdirSync(srcDir).forEach(file => {
+    const srcPath = path.join(srcDir, file);
+    const destPath = path.join(destDir, file);
+
+    if (file === 'start-bot.js') {
+      // Rename start-bot.js to copy-start-bot.js
+      fs.renameSync(srcPath, path.join(destDir, 'copy-start-bot.js'));
+    } else {
+      if (fs.lstatSync(srcPath).isDirectory()) {
+        if (fs.existsSync(destPath)) {
+          fs.rmSync(destPath, { recursive: true, force: true });
+        }
+        fs.renameSync(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  });
 }
 
 function parseVersion(version) {

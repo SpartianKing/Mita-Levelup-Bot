@@ -1,42 +1,50 @@
-const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
+  const fetch = (await import('node-fetch')).default; // Dynamically import node-fetch
   const REPO_OWNER = 'SpartianKing';
   const REPO_NAME = 'Mita-Levelup-Bot';
-  const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
+  const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/tags`;
 
   try {
     const response = await fetch(API_URL);
-    const data = await response.json();
+    const tags = await response.json();
 
-    const latestTag = data.tag_name;
-    const downloadUrl = data.zipball_url;
+    if (!Array.isArray(tags) || tags.length === 0) {
+      console.log('No tags found in the repository.');
+      return;
+    }
+
+    // Find the latest tag that is newer than the current version
+    const latestTag = tags.find(tag => isVersionNewer(VERSION, tag.name));
+
+    if (!latestTag) {
+      console.log('You are already using the latest version.');
+      return;
+    }
+
+    const downloadUrl = `https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/tags/${latestTag.name}.zip`;
 
     console.log(`Current version: ${VERSION}`);
-    console.log(`Latest version: ${latestTag}`);
+    console.log(`Latest version: ${latestTag.name}`);
 
-    if (isVersionNewer(VERSION, latestTag)) {
-      console.log('New version available. Downloading...');
-      const zipPath = path.resolve(__dirname, 'latest.zip');
-      const res = await fetch(downloadUrl);
-      const fileStream = fs.createWriteStream(zipPath);
-      await new Promise((resolve, reject) => {
-        res.body.pipe(fileStream);
-        res.body.on('error', reject);
-        fileStream.on('finish', resolve);
-      });
+    console.log('New version available. Downloading...');
+    const zipPath = path.resolve(__dirname, 'latest.zip');
+    const res = await fetch(downloadUrl);
+    const fileStream = fs.createWriteStream(zipPath);
+    await new Promise((resolve, reject) => {
+      res.body.pipe(fileStream);
+      res.body.on('error', reject);
+      fileStream.on('finish', resolve);
+    });
 
-      console.log('Download complete. Extracting...');
-      execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
-      fs.unlinkSync(zipPath); // Remove the zip file after extraction
-      console.log('Update complete. Please restart the bot to apply changes.');
-    } else {
-      console.log('You are already using the latest version.');
-    }
+    console.log('Download complete. Extracting...');
+    execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
+    fs.unlinkSync(zipPath); // Remove the zip file after extraction
+    console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {
     console.error('Error checking for updates:', error);
   }

@@ -1,8 +1,8 @@
 const simpleGit = require('simple-git');
 const path = require('path');
+const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
-  const VERSION = JSON.parse(process.env.VERSION)[0];
   const REPO_URL = 'https://github.com/SpartianKing/Mita-Levelup-Bot.git';
   const LOCAL_REPO_PATH = path.resolve(__dirname, '..'); // Assuming the script is in the UPDATER directory
 

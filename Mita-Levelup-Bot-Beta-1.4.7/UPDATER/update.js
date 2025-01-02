@@ -43,7 +43,7 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
-    const extractDir = path.resolve(__dirname, `Mita-Levelup-Bot-${latestTag.name}`);
+    const extractDir = path.resolve(__dirname, '..');
     if (os.platform() === 'win32') {
       // Use extract-zip for Windows
       const extract = require('extract-zip');
@@ -54,23 +54,11 @@ async function checkForUpdates() {
     }
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    console.log('Moving files to root directory...');
-    const rootDir = path.resolve(__dirname, '..');
-    const files = fs.readdirSync(extractDir);
-
-    files.forEach(file => {
-      if (file !== 'start-bot.js') {
-        const srcPath = path.join(extractDir, file);
-        const destPath = path.join(rootDir, file);
-        if (fs.existsSync(destPath)) {
-          fs.rmSync(destPath, { recursive: true, force: true });
-        }
-        fs.renameSync(srcPath, destPath);
-      }
-    });
-
-    // Clean up the temporary directory
-    fs.rmSync(extractDir, { recursive: true, force: true });
+    // Exclude start-bot.js from being overwritten
+    const startBotPath = path.resolve(__dirname, 'start-bot.js');
+    if (fs.existsSync(startBotPath)) {
+      fs.copyFileSync(startBotPath, path.join(extractDir, 'start-bot.js'));
+    }
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

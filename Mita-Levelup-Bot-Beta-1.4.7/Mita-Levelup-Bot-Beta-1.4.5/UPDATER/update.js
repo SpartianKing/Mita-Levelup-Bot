@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const os = require('os');
 const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
@@ -43,35 +42,8 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
-    const extractDir = path.resolve(__dirname, `Mita-Levelup-Bot-${latestTag.name}`);
-    if (os.platform() === 'win32') {
-      // Use extract-zip for Windows
-      const extract = require('extract-zip');
-      await extract(zipPath, { dir: extractDir });
-    } else {
-      // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${extractDir}`);
-    }
+    execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
-
-    console.log('Moving files to root directory...');
-    const rootDir = path.resolve(__dirname, '..');
-    const files = fs.readdirSync(extractDir);
-
-    files.forEach(file => {
-      if (file !== 'start-bot.js') {
-        const srcPath = path.join(extractDir, file);
-        const destPath = path.join(rootDir, file);
-        if (fs.existsSync(destPath)) {
-          fs.rmSync(destPath, { recursive: true, force: true });
-        }
-        fs.renameSync(srcPath, destPath);
-      }
-    });
-
-    // Clean up the temporary directory
-    fs.rmSync(extractDir, { recursive: true, force: true });
-
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {
     console.error('Error checking for updates:', error);

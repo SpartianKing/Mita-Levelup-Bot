@@ -15,7 +15,7 @@ This guide will walk you through the setup and configuration of the DreamCraft N
 First, you need to install the required dependencies. Copy and paste the following command into your terminal:
 
 ```bash
-npm install discord.js dotenv sqlite3 simple-git node-fetch extract-zip unzip zip
+npm install discord.js dotenv sqlite3 simple-git node-fetch extract-zip
 ```
 
 Note: This command must be run in the terminal and cannot be executed through the file.

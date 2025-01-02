@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const os = require('os');
 const { VERSION } = require('./version'); // Import the version
 
 async function checkForUpdates() {
@@ -43,14 +42,7 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
-    if (os.platform() === 'win32') {
-      // Use extract-zip for Windows
-      const extract = require('extract-zip');
-      await extract(zipPath, { dir: path.resolve(__dirname, '..') });
-    } else {
-      // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
-    }
+    execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

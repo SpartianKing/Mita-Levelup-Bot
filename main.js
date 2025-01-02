@@ -3,8 +3,6 @@ const dotenv = require('dotenv');
 const SQLite = require('sqlite3').verbose();
 const { loadCommands } = require('./COMMANDS/bot-commands');
 const { updateUserLevel } = require('./FUNCTIONS/functions');
-const { execSync } = require('child_process');
-const { checkForUpdates } = require('./UPDATER/update'); // Import the update function
 
 // Load .env variables
 dotenv.config();
@@ -37,20 +35,6 @@ levelDb.run(`
     rank TEXT
   )
 `);
-
-// Check if AUTOUPDATE is enabled
-if (process.env.AUTOUPDATE === 'true') {
-  try {
-    // Check if simple-git is installed
-    require.resolve('simple-git');
-  } catch (e) {
-    console.log('simple-git not found, installing...');
-    execSync('npm install simple-git', { stdio: 'inherit' });
-  }
-
-  // Run the update check
-  checkForUpdates();
-}
 
 // Load commands
 loadCommands(client, levelDb);

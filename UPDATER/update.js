@@ -43,15 +43,23 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
+    const extractDir = path.resolve(__dirname, '..');
     if (os.platform() === 'win32') {
       // Use extract-zip for Windows
       const extract = require('extract-zip');
-      await extract(zipPath, { dir: path.resolve(__dirname, '..') });
+      await extract(zipPath, { dir: extractDir });
     } else {
       // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
+      execSync(`unzip -o ${zipPath} -d ${extractDir}`);
     }
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
+
+    // Exclude start-bot.js from being overwritten
+    const startBotPath = path.resolve(__dirname, 'start-bot.js');
+    if (fs.existsSync(startBotPath)) {
+      fs.copyFileSync(startBotPath, path.join(extractDir, 'start-bot.js'));
+    }
+
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {
     console.error('Error checking for updates:', error);

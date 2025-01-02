@@ -43,24 +43,40 @@ async function checkForUpdates() {
     });
 
     console.log('Download complete. Extracting...');
-    const rootDir = path.resolve(__dirname, '..');
+    const extractDir = path.resolve(__dirname, `Mita-Levelup-Bot-${latestTag.name}`);
     if (os.platform() === 'win32') {
       // Use extract-zip for Windows
       const extract = require('extract-zip');
-      await extract(zipPath, { dir: rootDir });
+      await extract(zipPath, { dir: extractDir });
     } else {
       // Use unzip command for Linux
-      execSync(`unzip -o ${zipPath} -d ${rootDir}`);
+      execSync(`unzip -o ${zipPath} -d ${extractDir}`);
     }
     fs.unlinkSync(zipPath); // Remove the zip file after extraction
 
-    console.log('Renaming start-bot.js if it exists in the update...');
-    const newStartBotPath = path.join(rootDir, 'start-bot.js');
-    const copyStartBotPath = path.join(rootDir, 'copy-start-bot.js');
+    console.log('Moving files to root directory...');
+    const rootDir = path.resolve(__dirname, '..');
 
-    if (fs.existsSync(newStartBotPath)) {
-      fs.renameSync(newStartBotPath, copyStartBotPath);
-    }
+    // Move all files from the extracted directory to the root directory, excluding start-bot.js
+    fs.readdirSync(extractDir).forEach(file => {
+      const srcPath = path.join(extractDir, file);
+      const destPath = path.join(rootDir, file);
+      
+      if (file !== 'start-bot.js') {
+        if (fs.lstatSync(srcPath).isDirectory()) {
+          // Recursively copy the directory
+          execSync(`cp -r ${srcPath} ${destPath}`, { stdio: 'inherit' });
+          fs.rmSync(srcPath, { recursive: true, force: true });
+        } else {
+          // Overwrite file if it exists
+          fs.copyFileSync(srcPath, destPath);
+          fs.unlinkSync(srcPath);
+        }
+      }
+    });
+
+    // Clean up the temporary directory
+    fs.rmSync(extractDir, { recursive: true, force: true });
 
     console.log('Update complete. Please restart the bot to apply changes.');
   } catch (error) {

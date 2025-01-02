@@ -1,5 +1,6 @@
 # Mita-Levelup-Bot
 
+Version [Beta-2.0.0]
 
 This code is owned by Dreamcraft Network
 

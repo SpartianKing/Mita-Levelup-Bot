@@ -5,6 +5,7 @@ const {
   EmbedBuilder,
 } = require('discord.js');
 const { triviaQuestions } = require('../TRIVIA/questions'); // Import trivia questions
+const { VERSION } = require('../UPDATER/version'); // Import the version
 
 // Helper function to calculate the next level's required messages
 function getNextLevelMessages(level) {
@@ -120,7 +121,8 @@ const commandHandlers = {
         { name: '?ping', value: 'Check bot responsiveness.' },
         { name: '?greet', value: 'Get a friendly greeting.' },
         { name: '?help', value: 'See this list of commands.' },
-        { name: '?level', value: 'Check your current level and XP.' }
+        { name: '?level', value: 'Check your current level and XP.' },
+        { name: '?version', value: 'Show the current release version of the bot.' }
       );
 
     message.channel.send({ embeds: [embed] });
@@ -159,6 +161,10 @@ const commandHandlers = {
         message.channel.send({ embeds: [embed] });
       }
     );
+  },
+
+  version: async (message) => {
+    message.channel.send(`The current release version of the bot is **${VERSION}**.`);
   },
 
   setlevel: async (message, args, levelDb) => {

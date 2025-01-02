@@ -1,10 +1,49 @@
-const simpleGit = require('simple-git');
+const fetch = require('node-fetch');
+const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { VERSION } = require('./version'); // Import the version
 
+async function checkForUpdates() {
+  const REPO_OWNER = 'SpartianKing';
+  const REPO_NAME = 'Mita-Levelup-Bot';
+  const API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
+
+  try {
+    const response = await fetch(API_URL);
+    const data = await response.json();
+
+    const latestTag = data.tag_name;
+    const downloadUrl = data.zipball_url;
+
+    console.log(`Current version: ${VERSION}`);
+    console.log(`Latest version: ${latestTag}`);
+
+    if (isVersionNewer(VERSION, latestTag)) {
+      console.log('New version available. Downloading...');
+      const zipPath = path.resolve(__dirname, 'latest.zip');
+      const res = await fetch(downloadUrl);
+      const fileStream = fs.createWriteStream(zipPath);
+      await new Promise((resolve, reject) => {
+        res.body.pipe(fileStream);
+        res.body.on('error', reject);
+        fileStream.on('finish', resolve);
+      });
+
+      console.log('Download complete. Extracting...');
+      execSync(`unzip -o ${zipPath} -d ${path.resolve(__dirname, '..')}`);
+      fs.unlinkSync(zipPath); // Remove the zip file after extraction
+      console.log('Update complete. Please restart the bot to apply changes.');
+    } else {
+      console.log('You are already using the latest version.');
+    }
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+  }
+}
+
 function parseVersion(version) {
-  // Extract numeric parts from the version string and convert them to numbers
-  return version.match(/\d+/g).map(Number);
+  return version ? version.match(/\d+/g).map(Number) : [];
 }
 
 function isVersionNewer(currentVersion, latestVersion) {
@@ -18,35 +57,6 @@ function isVersionNewer(currentVersion, latestVersion) {
     if (currentPart > latestPart) return false;
   }
   return false;
-}
-
-async function checkForUpdates() {
-  const REPO_URL = 'https://github.com/SpartianKing/Mita-Levelup-Bot.git'; // GitHub repository URL
-  const LOCAL_REPO_PATH = path.resolve(__dirname, '..'); // Assuming the script is in the UPDATER directory
-
-  const git = simpleGit(LOCAL_REPO_PATH);
-
-  try {
-    // Fetch the latest changes from the remote repository
-    await git.fetch();
-
-    // Get the latest tag from the remote
-    const tags = await git.tags();
-    const latestTag = tags.latest;
-
-    console.log(`Current version: ${VERSION}`);
-    console.log(`Latest version: ${latestTag}`);
-
-    if (isVersionNewer(VERSION, latestTag)) {
-      console.log('New version available. Updating...');
-      await git.pull('origin', 'main'); // Pull the latest changes from the main branch
-      console.log('Update complete. Please restart the bot to apply changes.');
-    } else {
-      console.log('You are already using the latest version.');
-    }
-  } catch (error) {
-    console.error('Error checking for updates:', error);
-  }
 }
 
 module.exports = { checkForUpdates };
